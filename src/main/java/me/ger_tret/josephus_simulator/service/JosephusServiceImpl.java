@@ -2,10 +2,12 @@ package me.ger_tret.josephus_simulator.service;
 
 import me.ger_tret.josephus_simulator.dto.SimulationResultDto;
 import me.ger_tret.josephus_simulator.dto.SimulationStepDto;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Service
 public class JosephusServiceImpl implements JosephusService{
 
     @Override
