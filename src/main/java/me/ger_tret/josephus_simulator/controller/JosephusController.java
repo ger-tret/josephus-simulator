@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("api/v1/simulation")
 @RequiredArgsConstructor
-@Tag(name = "Josephus simulator", description = "API for Joshephus Problem visualisation")
+@Tag(name = "Josephus simulator", description = "API for Josephus Problem visualisation")
 public class JosephusController {
 
     private final JosephusService josephusService;
