@@ -8,7 +8,7 @@
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge&logo=freebsd)
 
 ## 💀 PROJECT_OVERVIEW
-An interactive, high-stress visualization of the ancient **Josephus Problem**. This isn't just a math calculator; it's a lo-fi simulation where you choose your vessel and watch the purge sequence in real-time.
+An interactive, high-stress visualization of the ancient **Josephus Problem**. This isn't just a math calculator; it's a simulation where you choose your vessel and watch the purge sequence in real-time.
 
 
 <p align="center">
