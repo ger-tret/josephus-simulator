@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Min;
 public record SimulationRequestDto(
         @Schema(example = "10", description = "Total number of participants")
         @Min(value = 1, message = "Participants count must be at least 1")
-        @Max(value = 1000, message = "For visualisation purposes, max participants count is 1000")
+        @Max(value = 50, message = "For visualisation purposes, max participants count is 50")
         int n,
 
         @Schema(example = "3", description = "Elimination step")

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JOSEPHUS_SIMULATOR</title>
+    <style>
+        body {
+            background-color: #050505;
+            color: #d1d1d1;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 40px 20px;
+            overflow-y: auto;
+            text-transform: uppercase;
+        }
+
+        /* CRT Effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
+            z-index: 100;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        h1 {
+            font-size: 3rem;
+            letter-spacing: 8px;
+            margin: 0 0 30px 0; /* Увеличен отступ снизу */
+            color: #fff;
+            text-shadow: 3px 3px #ff0000;
+        }
+
+        .subtitle {
+            font-size: 0.75rem;
+            color: #444;
+            margin-bottom: 40px;
+            letter-spacing: 3px;
+        }
+
+        .subtitle a {
+            color: #888;
+            text-decoration: none;
+            border-bottom: 1px solid #333;
+            transition: 0.3s;
+        }
+        .subtitle a:hover { color: #fff; border-color: #ff0000; }
+
+        .ui-panel {
+            border: 2px solid #333;
+            padding: 20px;
+            background: #000;
+            width: 340px;
+            margin-bottom: 30px;
+            z-index: 5;
+            flex-shrink: 0;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        input {
+            background: #000;
+            border: 1px solid #555;
+            color: #ff0000;
+            padding: 5px;
+            width: 50px;
+            outline: none;
+            text-align: center;
+        }
+
+        button {
+            width: 100%;
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+
+        button:disabled { background: #222; color: #444; cursor: not-allowed; }
+        button:hover:not(:disabled) { background: #ff0000; color: #fff; }
+
+        .circle-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            margin-bottom: 20px;
+            flex-shrink: 0;
+        }
+
+        /* Эффект вспышки в центре */
+        .center-burst {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 10px; height: 10px;
+            background: rgba(0, 255, 65, 0.4);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            pointer-events: none;
+            z-index: 1;
+        }
+        .burst-active { animation: burst-anim 0.5s ease-out; }
+        @keyframes burst-anim {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(40); opacity: 0; }
+        }
+
+        .person {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            border: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+            transform: translate(-50%, -50%);
+            font-size: 0.85rem;
+            background: #000;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .person.selected { border: 2px solid #00f0ff; color: #00f0ff; box-shadow: 0 0 15px #00f0ff; }
+        .person.target { background: #fff; color: #000; border-color: #fff; }
+        .person.eliminated { border-color: #ff0000; color: #ff0000; transform: translate(-50%, -50%) scale(0); opacity: 0; }
+        .person.survivor { border: 2px solid #00ff41; color: #00ff41; box-shadow: 0 0 30px #00ff41; transform: translate(-50%, -50%) scale(1.6); }
+
+        #log {
+            height: 40px;
+            color: #444;
+            font-size: 0.7rem;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .status-msg {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 6rem;
+            font-weight: bold;
+            display: none;
+            z-index: 200;
+            letter-spacing: 20px;
+            background: rgba(0,0,0,0.9);
+            width: 100vw;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(3px, 3px); }
+            20% { transform: translate(-3px, -3px); }
+            40% { transform: translate(5px, -5px); }
+            100% { transform: translate(0, 0); }
+        }
+        .shake { animation: shake 0.3s; }
+    </style>
+</head>
+<body>
+
+<div id="resultOverlay" class="status-msg"></div>
+
+<h1>JOSEPHUS_SIMULATOR</h1>
+<div class="subtitle">
+    INSPIRED BY <a href="https://en.wikipedia.org/wiki/Josephus_problem" target="_blank">JOSEPHUS_PROBLEM</a>
+</div>
+
+<div class="ui-panel">
+    <div class="input-group">
+        <label>POPULATION [MAX 50]:</label>
+        <input type="number" id="inputN" value="12" min="1" max="50">
+    </div>
+    <div class="input-group">
+        <label>PURGE STEP:</label>
+        <input type="number" id="inputK" value="3" min="1">
+    </div>
+    <div id="instruction" style="font-size: 0.6rem; color: #00f0ff; margin-bottom: 12px; text-align: center;">
+        >> SELECT YOUR VESSEL TO BEGIN <<
+    </div>
+    <button id="startBtn">START_PURGE_SEQUENCE</button>
+</div>
+
+<div class="circle-container" id="visualizer">
+    <div id="burst" class="center-burst"></div>
+</div>
+
+<div id="log"></div>
+
+<script>
+    const visualizer = document.getElementById('visualizer');
+    const log = document.getElementById('log');
+    const overlay = document.getElementById('resultOverlay');
+    const inputN = document.getElementById('inputN');
+    const startBtn = document.getElementById('startBtn');
+    const burst = document.getElementById('burst');
+
+    let selectedId = null;
+    let isRunning = false;
+    let isGameOver = false;
+
+    inputN.addEventListener('input', () => {
+        if (inputN.value > 50) inputN.value = 50;
+        setupCircle();
+    });
+
+    function setupCircle() {
+        if (isRunning || isGameOver) return;
+        const n = Math.min(parseInt(inputN.value) || 1, 50);
+        visualizer.innerHTML = '<div id="burst" class="center-burst"></div>';
+        selectedId = null;
+        renderCircle(Array.from({length: n}, (_, i) => i + 1), n);
+    }
+
+    function renderCircle(aliveIds, total) {
+        const radius = Math.max(110, 220 * (aliveIds.length / total));
+        const centerX = 250;
+        const centerY = 250;
+
+        aliveIds.forEach((id, index) => {
+            let el = document.getElementById(`p-${id}`);
+            if (!el) {
+                el = document.createElement('div');
+                el.className = 'person';
+                el.id = `p-${id}`;
+                el.innerText = id;
+                el.onclick = () => {
+                    if (isRunning || isGameOver) return;
+                    document.querySelectorAll('.person').forEach(p => p.classList.remove('selected'));
+                    el.classList.add('selected');
+                    selectedId = id;
+                    document.getElementById('instruction').style.color = "#fff";
+                    document.getElementById('instruction').innerText = `>> VESSEL_${id}_LOCKED <<`;
+                };
+                visualizer.appendChild(el);
+            }
+            const angle = index * (2 * Math.PI / aliveIds.length) - Math.PI / 2;
+            el.style.left = `${centerX + radius * Math.cos(angle)}px`;
+            el.style.top = `${centerY + radius * Math.sin(angle)}px`;
+        });
+    }
+
+    function triggerBurst() {
+        const burstEl = document.getElementById('burst');
+        burstEl.classList.remove('burst-active');
+        void burstEl.offsetWidth;
+        burstEl.classList.add('burst-active');
+    }
+
+    startBtn.addEventListener('click', async () => {
+        if (isGameOver) {
+            location.reload();
+            return;
+        }
+        if (isRunning) return;
+        if (!selectedId) {
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 300);
+            log.innerText = "!! ERROR: NO VESSEL SELECTED !!";
+            return;
+        }
+
+        isRunning = true;
+        startBtn.disabled = true;
+        const n = parseInt(inputN.value);
+        const k = parseInt(document.getElementById('inputK').value);
+
+        try {
+            const res = await fetch('/api/v1/simulation', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({n, k})
+            });
+            const data = await res.json();
+            await runSimulation(data, k);
+        } catch (e) {
+            location.reload();
+        }
+    });
+
+    async function runSimulation(data, k) {
+        let alive = Array.from({length: data.totalParticipants}, (_, i) => i + 1);
+        let currentIdx = 0;
+
+        for (const step of data.steps) {
+            for (let i = 0; i < k; i++) {
+                const tid = alive[(currentIdx + i) % alive.length];
+                const el = document.getElementById(`p-${tid}`);
+                el.classList.add('target');
+                await new Promise(r => setTimeout(r, 70));
+                el.classList.remove('target');
+            }
+
+            const killed = step.eliminatedId;
+            const el = document.getElementById(`p-${killed}`);
+
+            if (killed === selectedId) {
+                el.classList.add('eliminated');
+                document.body.classList.add('shake');
+                showFinal("FAILURE", "#ff0000");
+                return;
+            }
+
+            triggerBurst();
+            el.classList.add('eliminated');
+
+            currentIdx = alive.indexOf(killed);
+            alive.splice(currentIdx, 1);
+            await new Promise(r => setTimeout(r, 150));
+            renderCircle(alive, data.totalParticipants);
+        }
+
+        const winner = data.survivorId;
+        document.getElementById(`p-${winner}`).classList.add('survivor');
+        if (selectedId === winner) showFinal("SUCCESS", "#00ff41");
+        else showFinal("FAILURE", "#ff0000");
+    }
+
+    function showFinal(text, color) {
+        overlay.innerText = text;
+        overlay.style.color = color;
+        overlay.style.display = 'block';
+        isRunning = false;
+        isGameOver = true;
+        startBtn.disabled = false;
+        startBtn.innerText = "REBOOT_SYSTEM";
+        log.innerText = `>> SEQUENCE_COMPLETE: ${text}`;
+    }
+
+    setupCircle();
+</script>
+</body>
+</html>
