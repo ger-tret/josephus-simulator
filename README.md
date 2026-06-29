@@ -10,6 +10,11 @@
 ## 💀 PROJECT_OVERVIEW
 An interactive, high-stress visualization of the ancient **Josephus Problem**. This isn't just a math calculator; it's a lo-fi simulation where you choose your vessel and watch the purge sequence in real-time.
 
+
+<p align="center">
+  <img width="561" height="582" alt="animation" src="https://github.com/user-attachments/assets/2f1ac9e7-33e7-435d-8a2b-6240b28333cb" />
+</p>
+
 ---
 
 ## 🛠️ TECH_STACK
